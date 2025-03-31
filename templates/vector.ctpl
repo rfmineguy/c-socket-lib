@@ -80,3 +80,10 @@ T* vec_T_get(vec_T* arr, T v) {
 	}
 	return (void*)0;
 }
+
+void vec_T_delete(vec_T* arr, T v) {
+	for (int i = 0; i < arr->size; i++) {
+		if (vec_T_cmp(arr->data[i], v) == 0) {
+		}
+	}
+}

@@ -17,5 +17,6 @@ T 	 vec_T_peekfront(vec_T*);
 T 	 vec_T_peekback (vec_T*);
 void vec_T_print    (vec_T*);
 T*   vec_T_get 			(vec_T*, T);
+void vec_T_delete 	(vec_T*, T);
 
 #endif

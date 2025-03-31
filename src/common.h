@@ -10,7 +10,7 @@
 	do {\
 		int v = expr;\
 		if (v) {\
-			fprintf(stderr, "Error(%d)[%d][%s]: %s\n", v, errno, strerror(errno), errmessage);\
+			fprintf(stderr, "Error(line=%d)[%d][%s]: %s\n", __LINE__, errno, strerror(errno), errmessage);\
 			exit(1);\
 		}\
 	} while (0);
