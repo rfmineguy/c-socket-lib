@@ -20,6 +20,7 @@ always:
 
 clean:
 	rm -r out
+clean-templates:
 	rm -r $(TPL_OUTDIR)
 
 build-all: template_gen build-server build-client
