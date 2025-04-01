@@ -12,7 +12,7 @@ server server_new(int port) {
 	check(bind(s.server_fd, (struct sockaddr*)&s.address, sizeof(s.address)) < 0, "Failed to bind");
 	check(listen(s.server_fd, 3) < 0, "Failed to listen");
 
-	s.message_decoder_ht = ht_msg_type_msg_decoder_create();
+	s.message_decoder_ht = ht_server_msg_type_msg_decoder_create();
 	s.clients = vec_server_client_handler_create();
 	printf("Initialized client vector\n");
 
@@ -35,12 +35,12 @@ void server_exit_callback(void* arg) {
 	close(s->server_fd);
 }
 
-void server_register_message_handler(server* server, int type, void(*msgDecoder)(struct server*, char*, int)) {
+void server_register_message_handler(server* server, int type, void(*msgDecoder)(struct server*, int, char*, int)) {
 	if (msgDecoder == (void*)0) {
 		fprintf(stderr, "Can't register a null message decoder function\n");
 		return;
 	}
-	ht_msg_type_msg_decoder_put(&server->message_decoder_ht, type, msgDecoder);
+	ht_server_msg_type_msg_decoder_put(&server->message_decoder_ht, type, msgDecoder);
 	printf("Registered message decoder: %d\n", type);
 }
 
@@ -52,9 +52,9 @@ void* server_client_thread(void* arg) {
 	while (handler->server_ref->running) {
 		message_ret ret = message_read(handler->client_fd);
 		printf("read msg-type: %d\n", ret.type);
-		if (ht_msg_type_msg_decoder_contains_key(&handler->server_ref->message_decoder_ht, ret.type)) {
-			msg_decoder* d = ht_msg_type_msg_decoder_get(&handler->server_ref->message_decoder_ht, ret.type);
-			(*d)(handler->server_ref, ret.payload, ret.size);
+		if (ht_server_msg_type_msg_decoder_contains_key(&handler->server_ref->message_decoder_ht, ret.type)) {
+			server_msg_decoder* d = ht_server_msg_type_msg_decoder_get(&handler->server_ref->message_decoder_ht, ret.type);
+			(*d)(handler->server_ref, handler->client_fd, ret.payload, ret.size);
 		}
 	}
 	printf("Client thread terminating\n");

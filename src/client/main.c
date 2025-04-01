@@ -6,46 +6,25 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-typedef struct client {
-	bool running;
-	int client_fd;
-	struct sockaddr_in server_address;
-} client;
+#include "client.h"
 
-void client_exit_callback(void* dataptr) {
-	client* client = (struct client*)dataptr;
-	printf("exit: client_fd=%d\n", client->client_fd);
-	close(client->client_fd);
-}
-
-void* message_listener_thread(void* arg) {
-	client* clientp = (client*)arg;
-	while (clientp->running) {}
-	return NULL;
+void login_res_handler(struct client* c, int server_fd, char* data, int size) {
+	payload_login_response* res = (payload_login_response*)data;
+	printf("Login response handler\n");
+	printf("  status: %d\n", res->status);
 }
 
 int main() {
-	int status, val;
-	char* message = "Pello world";
-	char buffer[1024];
-	pthread_t listener_thread;
+	client c = client_new("127.0.0.1", PORT);
+	client_register_message_handler(&c, pt_login_response, login_res_handler);
 
-	client client = {0};
+	pthread_create(&c.server_msg_listener_thread, NULL, client_message_listener_thread, &c);
 
 	atexit(run_exit_handlers);
-	register_exit(client_exit_callback, &client);
+	register_exit(client_exit_callback, &c);
 
-	check((client.client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0, "Failed to create socket");
-	client.server_address.sin_family = AF_INET;
-	client.server_address.sin_port = htons(PORT);
+	message_send(c.client_fd, pt_login_request, sizeof(payload_login_request), &(payload_login_request){.username="rf", .password="pass"});
+	sleep(5);
 
-	check((inet_pton(AF_INET, "127.0.0.1", &client.server_address.sin_addr)) <= 0, "Address not supported");
-	check((status = connect(client.client_fd, (struct sockaddr*)&client.server_address, sizeof(client.server_address))), "Failed to connect");
-
-	pthread_create(&listener_thread, NULL, message_listener_thread, &client);
-	pthread_join(listener_thread, NULL);
-
-	message_send(client.client_fd, 0, sizeof("Pello World"), "Pello World");
-	message_send(client.client_fd, 0, sizeof("New message"), "New message");
-	message_send(client.client_fd, 1, sizeof(payload1), &(payload1){.x = 4, .words = "booger"});
+	client_close(&c);
 }

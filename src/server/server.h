@@ -2,7 +2,7 @@
 #define SERVER_H
 #include "../common.h"
 #include "../generated/vector_server_client_handler.h"
-#include "../generated/hash_table_msg_type_msg_decoder.h"
+#include "../generated/hash_table_server_msg_type_msg_decoder.h"
 #include "../message.h"
 #include "../util.h"
 #include <pthread.h>
@@ -20,7 +20,7 @@ typedef struct server {
 	bool running;
 
 	vec_server_client_handler clients;
-	ht_msg_type_msg_decoder message_decoder_ht;
+	ht_server_msg_type_msg_decoder message_decoder_ht;
 
 	pthread_t connection_thread;
 } server;
@@ -29,7 +29,7 @@ server server_new(int port);
 void   server_close(server*);
 void   server_exit_callback(void*);
 
-void   server_register_message_handler(server*, int, void(*msgDecoder)(server*, char*, int));
+void   server_register_message_handler(server*, int, void(*msgDecoder)(server*, int, char*, int));
 
 void*  server_client_thread(void*);
 void*  server_connection_thread(void*);

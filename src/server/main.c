@@ -16,15 +16,25 @@ void help() {
 	printf("  help              - displays this message\n");
 }
 
-void type0decoder(struct server* server, char* data, int size) {
+void type0decoder(struct server* server, int client_fd, char* data, int size) {
 	payload0* payload = (payload0*)data;
 	printf("Decoding message type 0\n");
 	printf("decoder0 :: buf=%s\n", payload->buf);
 }
 
-void type1decoder(struct server* server, char* data, int size) {
+void type1decoder(struct server* server, int client_fd, char* data, int size) {
 	payload1* payload = (payload1*)data;
 	printf("decoder1 :: x=%d, words=%s\n", payload->x, payload->words);
+}
+
+void login_req_handler(struct server* server, int client_fd, char* data, int size) {
+	payload_login_request* req = (payload_login_request*)data;
+
+	printf("LoginRequest(%d):\n", client_fd);
+	printf("  username: %s\n", req->username);
+	printf("  password: %s\n", req->password);
+
+	message_send(client_fd, pt_login_response, sizeof(payload_login_response), &(payload_login_response){.status=1});
 }
 
 int main() {
@@ -39,6 +49,8 @@ int main() {
 	// register message decoders
 	server_register_message_handler(&server, 0, type0decoder);
 	server_register_message_handler(&server, 1, type1decoder);
+
+	server_register_message_handler(&server, pt_login_request, login_req_handler);
 
 	// server logic
 	char buf[1024];
