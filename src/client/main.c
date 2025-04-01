@@ -15,20 +15,12 @@ typedef struct client {
 void client_exit_callback(void* dataptr) {
 	client* client = (struct client*)dataptr;
 	printf("exit: client_fd=%d\n", client->client_fd);
-
 	close(client->client_fd);
-	// send disconnect message here
 }
 
 void* message_listener_thread(void* arg) {
 	client* clientp = (client*)arg;
-	// we need to somehow ensure that the whole message is ready
-	
-	char buffer[1024] = {0};
-	while (clientp->running) {
-		// ssize_t b = message_read(clientp->client_fd);
-		// message_decode_buffer(buffer, b);	
-	}
+	while (clientp->running) {}
 	return NULL;
 }
 

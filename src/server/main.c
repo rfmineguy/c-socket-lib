@@ -16,13 +16,15 @@ void help() {
 	printf("  help              - displays this message\n");
 }
 
-void type0decoder(char* data, int size) {
+void type0decoder(struct server* server, char* data, int size) {
+	payload0* payload = (payload0*)data;
 	printf("Decoding message type 0\n");
-	printf("  %*s\n", size, data);
+	printf("decoder0 :: buf=%s\n", payload->buf);
 }
-void type1decoder(char* data, int size) {
+
+void type1decoder(struct server* server, char* data, int size) {
 	payload1* payload = (payload1*)data;
-	printf("x=%d, words=%s\n", payload->x, payload->words);
+	printf("decoder1 :: x=%d, words=%s\n", payload->x, payload->words);
 }
 
 int main() {
@@ -35,8 +37,8 @@ int main() {
 	register_exit(server_exit_callback, &server);
 
 	// register message decoders
-	message_decoder_register(0, type0decoder);
-	message_decoder_register(1, type1decoder);
+	server_register_message_handler(&server, 0, type0decoder);
+	server_register_message_handler(&server, 1, type1decoder);
 
 	// server logic
 	char buf[1024];

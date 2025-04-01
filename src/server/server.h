@@ -29,7 +29,7 @@ server server_new(int port);
 void   server_close(server*);
 void   server_exit_callback(void*);
 
-void   server_register_message_handler(server*, int, void(*msgDecoder)(char*, int));
+void   server_register_message_handler(server*, int, void(*msgDecoder)(server*, char*, int));
 
 void*  server_client_thread(void*);
 void*  server_connection_thread(void*);

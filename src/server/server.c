@@ -35,12 +35,13 @@ void server_exit_callback(void* arg) {
 	close(s->server_fd);
 }
 
-void server_register_message_handler(server* server, int type, void(*msgDecoder)(char*, int)) {
+void server_register_message_handler(server* server, int type, void(*msgDecoder)(struct server*, char*, int)) {
 	if (msgDecoder == (void*)0) {
 		fprintf(stderr, "Can't register a null message decoder function\n");
 		return;
 	}
 	ht_msg_type_msg_decoder_put(&server->message_decoder_ht, type, msgDecoder);
+	printf("Registered message decoder: %d\n", type);
 }
 
 void* server_client_thread(void* arg) {
@@ -50,12 +51,11 @@ void* server_client_thread(void* arg) {
 	char buf[1024] = {0};
 	while (handler->server_ref->running) {
 		message_ret ret = message_read(handler->client_fd);
+		printf("read msg-type: %d\n", ret.type);
 		if (ht_msg_type_msg_decoder_contains_key(&handler->server_ref->message_decoder_ht, ret.type)) {
 			msg_decoder* d = ht_msg_type_msg_decoder_get(&handler->server_ref->message_decoder_ht, ret.type);
-			(*d)(ret.payload, ret.size);
+			(*d)(handler->server_ref, ret.payload, ret.size);
 		}
-
-		message_decode_buffer(ret.payload, ret.size, ret.type);
 	}
 	printf("Client thread terminating\n");
 	return NULL;
