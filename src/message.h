@@ -2,7 +2,8 @@
 #define MESSAGE_H
 #include <unistd.h>
 
-typedef void(*msg_decoder)(char*,int);
+struct server;
+typedef void(*msg_decoder)(struct server*, char*,int);
 
 /*
  * message
@@ -30,8 +31,5 @@ typedef struct {
 
 void    		message_send(int sockfd, short type, int size, char* payloadptr);
 message_ret message_read(int sockfd);
-
-void 				message_decoder_register(int type, msg_decoder decoder);
-void    		message_decode_buffer(char* buffer, int size, int type);
 
 #endif

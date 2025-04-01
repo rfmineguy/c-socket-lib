@@ -11,11 +11,9 @@ void message_send(int sockfd, short type, int size, char* payloadptr) {
 	message_hdr header = (message_hdr){.header_sig = {0x1, 0x2, 0x3}, .type = type, .payloadsize = size, .eot = 0x4};
 	// 1. send message header
 	ssize_t sent_header_bytes  = send(sockfd, &header, sizeof(header), 0);
-	printf("sent header: %lu\n", sent_header_bytes);
 	
 	// 2. send message body
 	ssize_t sent_message_bytes = send(sockfd, payloadptr, size, 0);
-	printf("sent message: %lu. '%*s'\n", sent_header_bytes, size, payloadptr);
 }
 
 ssize_t recv_all(int sock, void *buffer, size_t size) {
@@ -44,27 +42,4 @@ message_ret message_read(int sockfd) {
 	recv_all(sockfd, buf, header.payloadsize);
 
 	return (message_ret){.type = header.type, .size = header.payloadsize, .payload = buf};
-}
-
-void message_decoder_register(int type, void(*msgDecoder)(char*, int)) {
-	if (msgDecoder == (void*)0) {
-		fprintf(stderr, "Can't register null message decoder\n");
-		return;
-	}
-	ht_msg_type_msg_decoder_put(&ht, type, msgDecoder);
-}
-
-void message_decode_buffer(char* buffer, int size, int type) {
-	if (!ht_msg_type_msg_decoder_contains_key(&ht, type)) {
-		fprintf(stderr, "No message decoder for type [%d]\n", type);
-		return;
-	}
-	msg_decoder* decoder = ht_msg_type_msg_decoder_get(&ht, type);
-	if (decoder) {
-		(*decoder)(buffer, size);
-	}
-	else {
-		printf("No decoder for type: %d\n", type);
-	}
-	// message_decoder(buffer + sizeof(short) + sizeof(int), size);
 }
