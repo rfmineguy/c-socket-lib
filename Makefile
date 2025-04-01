@@ -1,5 +1,5 @@
-SERVER_SOURCES 	:= $(wildcard src/server/*.c)
-CLIENT_SOURCES 	:= $(wildcard src/client/*.c)
+SERVER_SOURCES 	:= $(filter-out src/server/main.c, $(wildcard src/server/*.c))
+CLIENT_SOURCES 	:= $(filter-out src/client/main.c, $(wildcard src/client/*.c))
 COMMON_SOURCES  := $(wildcard src/*.c)
 GENERATED_FILES := src/generated/vector_server_client_handler.c\
 									 src/generated/hash_table_client_msg_type_msg_decoder.c\
@@ -13,7 +13,7 @@ GENERATED_OBJECTS := $(patsubst src/generated/%.c, out/generated/%.o, $(GENERATE
 
 TPL_OUTDIR  		:= src/generated
 
-CFLAGS := -ggdb -Isrc/server/ -Isrc/generated/ -Isrc/ -Isrc/spec/
+CFLAGS := -Isrc/server/ -Isrc/generated/ -Isrc/ -Isrc/spec/
 
 export GEN_TEMPLATE_PATH=templates/
 
@@ -28,6 +28,8 @@ always:
 	mkdir -p out/server
 	mkdir -p out/common
 	mkdir -p out/generated
+	mkdir -p out/lib
+	mkdir -p out/bin
 	mkdir -p $(TPL_OUTDIR)
 
 clean:
@@ -36,16 +38,16 @@ clean-templates:
 	rm -r $(TPL_OUTDIR)
 
 build-all: template_gen build-server build-client
-build-server: always out/server
-build-client: always out/client
+build-server: always out/bin/server
+build-client: always out/bin/client
 build-objects: always $(SERVER_OBJECTS) $(CLIENT_OBJECTS) $(COMMON_OBJECTS) $(GENERATED_OBJECTS)
-build-static-lib: always out/socketclientlib.a out/socketserverlib.a
+build-static-lib: always out/lib/libsocketclient.a out/lib/libsocketserver.a
 
-out/server: $(SERVER_SOURCES) $(COMMON_SOURCES) $(GENERATED_FILES)
-	gcc $^ -o $@ $(CFLAGS)
+out/bin/server: out/lib/libsocketserver.a
+	gcc src/server/main.c -o $@ $(CFLAGS) -Lout/lib/ -lsocketserver
 
-out/client: $(CLIENT_SOURCES) $(COMMON_SOURCES) $(GENERATED_FILES)
-	gcc $^ -o $@ $(CFLAGS)
+out/bin/client: out/lib/libsocketclient.a
+	gcc src/client/main.c -o $@ $(CFLAGS) -Lout/lib/ -lsocketclient
 
 out/client/%.o: src/client/%.c
 	gcc -c $^ -o $@ $(CFLAGS)
@@ -59,10 +61,10 @@ out/common/%.o: src/%.c
 out/generated/%.o: src/generated/%.c
 	gcc -c $^ -o $@ $(CFLAGS)
 
-out/socketserverlib.a: $(SERVER_OBJECTS) $(COMMON_OBJECTS) $(GENERATED_OBJECTS)
+out/lib/libsocketserver.a: $(SERVER_OBJECTS) $(COMMON_OBJECTS) $(GENERATED_OBJECTS)
 	ar -rc $@ $^
 
-out/socketclientlib.a: $(CLIENT_OBJECTS) $(COMMON_OBJECTS) $(GENERATED_OBJECTS)
+out/lib/libsocketclient.a: $(CLIENT_OBJECTS) $(COMMON_OBJECTS) $(GENERATED_OBJECTS)
 	ar -rc $@ $^
 
 template_gen: always $(GENERATED_FILES)
