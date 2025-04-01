@@ -3,9 +3,6 @@
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "generated/hash_table_msg_type_msg_decoder.h"
-
-ht_msg_type_msg_decoder ht = {0};
 
 void message_send(int sockfd, short type, int size, char* payloadptr) {
 	message_hdr header = (message_hdr){.header_sig = {0x1, 0x2, 0x3}, .type = type, .payloadsize = size, .eot = 0x4};

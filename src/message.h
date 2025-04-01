@@ -3,7 +3,9 @@
 #include <unistd.h>
 
 struct server;
-typedef void(*msg_decoder)(struct server*, char*,int);
+struct client;
+typedef void(*client_msg_decoder)(struct client*, int, char*,int);
+typedef void(*server_msg_decoder)(struct server*, int, char*,int);
 
 /*
  * message
